@@ -4,10 +4,6 @@ import pandas as pd
 from config_loader import load_and_validate_config
 
 
-def load_config(file_path: str):
-    with open(file_path, 'r') as f:
-        return yaml.safe_load(f)
-
 def render_navigation():
     navigation_items = {
         "Service Configuration": "Service Configuration",
@@ -29,7 +25,7 @@ def display_service_summary(service):
 
     with col2:
         st.markdown("### Rollout Strategy")
-        rollstrategy = service.get("rollstrategy", {})
+        rollstrategy = service.get("rollstrategy", None)
         if rollstrategy:
             st.write(f"**Status:** ✅ Enabled")
         else:
@@ -70,9 +66,20 @@ def render_service_config(config):
 
         with tab2:
             st.header("Matches")
-            df_matches = pd.DataFrame(service.get("matches", []))
-            if not df_matches.empty:
-                st.dataframe(df_matches)
+
+            # Editable matches table
+            matches = service.get("matches", [])
+            if matches:
+                for i, match in enumerate(matches):
+                    st.markdown(f"#### Match {i+1}")
+                    match["header_name"] = st.text_input(f"Header Name ({i+1})", match["header_name"], key=f"header_name_{i}")
+                    match["operator"] = st.selectbox(f"Operator ({i+1})", ["==", "~="], index=["==", "~="].index(match["operator"]), key=f"operator_{i}")
+                    match["value"] = st.text_input(f"Value ({i+1})", match["value"], key=f"value_{i}")
+
+                if st.button("Save Matches"):
+                    config_file = "input.yaml"
+                    save_config(config_file, config)
+                    st.success("Matches updated successfully!")
             else:
                 st.write("No matches defined.")
 
@@ -86,11 +93,11 @@ def render_service_config(config):
 
         with tab4:
             st.header("Rollout Strategy")
-            rollstrategy = service.get("rollstrategy", {})
+            rollstrategy = service.get("rollstrategy", None)
             if rollstrategy:
                 st.write(f"**Strategy Name:** {rollstrategy.get('name', 'default')}")
 
-                weighted_upstreams = rollstrategy.get("weighted_upstreams", [])
+                weighted_upstreams = rollstrategy.get("groups", [])
                 if weighted_upstreams:
                     graphviz_dot = "digraph G {\n" + "\n".join(
                         f'  "{service["name"]}" -> "{upstream["upstream_id"]}" [label="{upstream["weight"]}%"]'
@@ -107,9 +114,8 @@ def render_service_config(config):
             st.header("Selected Service Configuration")
             st.code(yaml.dump(service, default_flow_style=False), language="yaml")
 
+
 st.set_page_config(page_title="Service Configuration", layout="wide")
-
-
 config_file = "config/input.yaml"
 # Validate and display the config
 try:
