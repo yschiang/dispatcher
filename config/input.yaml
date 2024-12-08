@@ -1,0 +1,78 @@
+services:
+  - name: RMS
+    admin_state: enabled
+    uri: /rms/
+    default_upstream: rms-blue
+    matches:
+      - id: Match1
+        header_name: X-Tool-Id
+        operator: "=="
+        value: tool123
+      - id: Match2
+        header_name: X-Tool-Id
+        operator: "=="
+        value: tool456
+      - id: Match3
+        header_name: X-Tool-Type
+        operator: "~="
+        value: "^type.*"
+    rules:
+      - id: conditional-tool-id
+        matches:
+          - Match1
+          - Match2
+        upstream_id: rms-green
+      - id: conditional-tool-type
+        matches:
+          - Match3
+        upstream_id: rms-green
+    upstreams:
+      - id: rms-blue
+        target: rms-blue.k8s.svc.cluster.local
+        port: 80
+        version: 2024.M410.0
+      - id: rms-green
+        target: rms-green.k8s.svc.cluster.local
+        port: 80
+        version: 2024.w412.0
+    rollstrategy:
+      groups:
+        - id: A
+          upstream_id: rms-green
+          weight: 20
+        - id: B
+          upstream_id: rms-blue
+          weight: 80
+
+  - name: MMS
+    admin_state: enabled
+    uri: /mms/
+    default_upstream: mms-blue
+    matches:
+      - id: Match4
+        header_name: X-Tool-Id
+        operator: "=="
+        value: tool789
+      - id: Match5
+        header_name: X-Tool-Type
+        operator: "~="
+        value: "^special.*"
+    rules:
+      - id: conditional-tool-id
+        matches:
+          - Match4
+        upstream_id: mms-green
+      - id: conditional-tool-type
+        matches:
+          - Match5
+        upstream_id: mms-green
+    upstreams:
+      - id: mms-blue
+        target: mms-blue.k8s.svc.cluster.local
+        port: 80
+        version: 2024.M410.0
+      - id: mms-green
+        target: mms-green.k8s.svc.cluster.local
+        port: 80
+        version: 2024.w412.0
+    rollstrategy: null
