@@ -3,12 +3,14 @@ from config_loader import load_and_validate_config, ConfigValidationError
 
 
 pages = {
+    "Task": [
+        #st.Page("config.py", title="Configure Service"),
+        st.Page("new_upstream.py", title="Configure Upstream"),
+    ],
+
     "View": [
         st.Page("view_services.py", title="View Services"),
         st.Page("view_config.py", title="View Configuration YAML"),
-    ],
-    "Configurations": [
-        #st.Page("config.py", title="Configure Service"),
     ],
     "Troubleshoot": [
         st.Page("validate_config.py", title="Validate Configuration YAML"),

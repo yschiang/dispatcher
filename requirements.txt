@@ -3,3 +3,4 @@ pyyaml
 streamlit-antd-components
 matplotlib
 deepdiff
+extra_streamlit_components
